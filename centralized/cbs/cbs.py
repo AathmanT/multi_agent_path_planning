@@ -8,6 +8,7 @@ author: Ashwin Bose (@atb033)
 import sys
 import time
 
+import numpy as np
 
 sys.path.insert(0, '../')
 import argparse
@@ -111,8 +112,9 @@ class Environment(object):
         self.dimension = dimension
         self.obstacles = obstacles
 
-        self.obstacle_circles = [Circle(v(x, y), OBSTACLE_RADIUS) for x, y in obstacles]
-
+        # add obstacles as numpy array
+        self.obstacle_circles_positions = np.array([[x, y] for x, y in obstacles])
+        self.obstacle_circles_radii = np.full(len(obstacles), OBSTACLE_RADIUS)
         self.agents = agents
         self.agent_dict = {}
 
@@ -211,12 +213,34 @@ class Environment(object):
         else:
             return solution[agent_name][-1]
 
+    def test_circle_circle_numpy(self, a_positions, a_radii, b_positions, b_radii):
+        # Calculate the squared distances between all pairs of circles
+        difference_v = b_positions - a_positions
+        distance_sq = np.sum(difference_v ** 2, axis=-1)
+
+        # Calculate the squared sum of radii for all pairs of circles
+        total_radius_sq = (a_radii + b_radii) ** 2
+
+        # Find the pairs of circles where the distance is less than the total radius
+        collision = distance_sq <= total_radius_sq
+
+        return collision
+
     def check_collision(self, state):
-        robot_circle = Circle(v(state.location.x, state.location.y), ROBOT_RADIUS)
-        for obstacle_circle in self.obstacle_circles:
-            if collide(robot_circle, obstacle_circle):
-                return True
-        return False
+        # robot_circle = Circle(v(state.location.x, state.location.y), ROBOT_RADIUS)
+        # Convert the robot's position and radius to NumPy arrays
+        robot_positions = np.array([[state.location.x, state.location.y]])
+        robot_radii = np.array([ROBOT_RADIUS])
+        collisions = self.test_circle_circle_numpy(robot_positions, robot_radii, self.obstacle_circles_positions,
+                                              self.obstacle_circles_radii)
+
+        # If there is any collision, return True
+        return np.any(collisions)
+
+        # for obstacle_circle in self.obstacle_circles:
+        #     if collide(robot_circle, obstacle_circle):
+        #         return True
+        # return False
     def state_valid(self, state):
         return state.location.x >= 0 and state.location.x < self.dimension[0] \
             and state.location.y >= 0 and state.location.y < self.dimension[1] \
@@ -305,8 +329,8 @@ class CBS(object):
             self.closed_set |= {P}
 
             self.env.constraint_dict = P.constraint_dict
-            # if self.plot:
-            #     plot_map_and_paths(self.param, P.solution)
+            if self.plot:
+                plot_map_and_paths(self.param, P.solution)
             conflict_dict = self.env.get_first_conflict(P.solution)
             if not conflict_dict:
                 print("solution found")
