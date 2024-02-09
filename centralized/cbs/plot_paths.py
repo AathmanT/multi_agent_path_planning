@@ -5,7 +5,7 @@ import numpy as np
 from cbs.constants import PLT_OBSTACLE_RADIUS, PLT_ROBOT_RADIUS
 
 
-def plot_map_and_paths(data, paths):
+def plot_map_and_paths(data, paths=None):
     # Increase the size of the plot
     fig, ax = plt.subplots(figsize=(10, 10))
 
@@ -30,17 +30,18 @@ def plot_map_and_paths(data, paths):
         obs = patches.Circle((obstacle[0] + 0.5, obstacle[1] + 0.5), radius=PLT_OBSTACLE_RADIUS, color='red')
         ax.add_patch(obs)
 
-    # Plot the paths
-    for agent, path in paths.items():
-        # Unzip the path into X and Y coordinates
-        X, Y = zip(*[(state.location.x + 0.5, state.location.y + 0.5) for state in path])
-        # Plot the path with a line
-        ax.plot(X, Y, color='black', alpha=0.5)
-        # Plot the circles
-        for state in path:
-            location = state.location
-            circle = patches.Circle((location.x + 0.5, location.y + 0.5), radius=PLT_ROBOT_RADIUS, facecolor='yellow', alpha=0.5)
-            ax.add_patch(circle)
+    if paths:
+        # Plot the paths
+        for agent, path in paths.items():
+            # Unzip the path into X and Y coordinates
+            X, Y = zip(*[(state.location.x + 0.5, state.location.y + 0.5) for state in path])
+            # Plot the path with a line
+            ax.plot(X, Y, color='black', alpha=0.5)
+            # Plot the circles
+            for state in path:
+                location = state.location
+                circle = patches.Circle((location.x + 0.5, location.y + 0.5), radius=PLT_ROBOT_RADIUS, facecolor='yellow', alpha=0.5)
+                ax.add_patch(circle)
 
     # plt.show()
     plt.show(block=False)  # Display the figure without blocking

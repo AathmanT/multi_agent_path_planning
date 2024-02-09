@@ -310,6 +310,8 @@ class CBS(object):
         self.open_set = set()
         self.closed_set = set()
     def search(self):
+        # if self.plot:
+        #     plot_map_and_paths(self.param)
         start = HighLevelNode()
         # TODO: Initialize it in a better way
         start.constraint_dict = {}
